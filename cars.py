@@ -131,14 +131,86 @@ def dropTables(_conn):
         _conn.execute("ROLLBACK")
         print(e)
 
+# Front Page
+def frontPage(_conn):
+    print("+================================+")
+    out ="""Are you buying or selling a vehicle?:
+    1. Buying
+    2. Selling
+    +==================================+
+    """
+    print(out)
+    choice = input()
+    if(choice == '1'):
+        buyerPage(_conn)
+    elif(choice == '2'):
+        sellerPage(_conn)
+    else:
+        print("Enter a valid option")
+        frontPage(_conn)
+
+def buyerPage(_conn):
+    print("\n+===== BROWNSE CARS: =====+")
+    cursor = _conn.cursor()
+    Make = input('Enter make: ')
+    Model = input('Enter model: ')
+    Year = input('Enter year: ')
+    
+    command = ("""SELECT * FROM automobile WHERE a_make = ?
+        AND a_model = ? AND a_year = ?;""")
+    args = [Make,Model,Year]
+    cursor.execute(command, args)
+    print('Results: ')
+    results = cursor.fetchall()
+    print('VIN    Make   Model     Type    Condition  Year   Price')
+    for row in results:
+        print(row)
+    
+    choice = input("""\n\nWhat would you like to do?
+    1. Buy
+    2. Browse
+    *Press Any key to return home*
+    """)
+    if(choice == '1'):
+        purchasePage(_conn)
+    elif(choice == '2'):
+        buyerPage(_conn)
+    else:
+        frontPage(_conn)
+
+def purchasePage(_conn):
+    print('\n+===== Purchase Page =====+\n')
+    cursor = _conn.cursor()
+    vehicle = input('To purchase enter vehicle VIN: ')
+    first = """SELECT a_VIN, a_price,s_name FROM automobile, warehouse, seller
+            WHERE a_VIN = ?
+            AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey; """
+    args =[vehicle]
+    cursor.execute(first,args)
+    result1 = cursor.fetchall()
+    
+    for row in result1:
+        print(row)
+    # cursor.execute(second,args)
+    # result1 = cursor.fetchall()
+    # for row in result1:
+    #     print(row)
+    #command = ("""INSERT INTO transactions """)
+
+
+
+def sellerPage(_conn):
+    print("you chose 2")
+
 def main():
     database = r"automobiles.sqlite"
     # create a database connection
     conn = openConnection(database)
     with conn:
         #dropTables(conn)
-        createTables(conn)
+        #createTables(conn)
         #populateTables(conn)
+        frontPage(conn)
        
     closeConnection(conn, database)
 if __name__ == '__main__':
