@@ -47,3 +47,7 @@ WHERE a_condition = 'Used' AND a_type = 'SUV';
 --type AND price
 SELECT * FROM automobile
 WHERE a_type = 'SUV' AND a_price = 30000;
+
+SELECT a_VIN, a_price,s_name FROM automobile, warehouse, seller
+        WHERE a_VIN = 3205
+        AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey;

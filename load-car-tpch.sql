@@ -1,5 +1,5 @@
 .mode "csv"
-.separator","
+--.separator","
 .import autos_Table.csv automobile
 .import customers_Table.csv customer
 .import manufacturers_Table.csv manufacturer

@@ -183,7 +183,7 @@ def purchasePage(_conn):
     cursor = _conn.cursor()
     vehicle = input('To purchase enter vehicle VIN: ')
     first = """SELECT a_VIN, a_price,s_name FROM automobile, warehouse, seller
-            WHERE a_VIN = ?
+            WHERE a_VIN = 3205
             AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey; """
     args =[vehicle]
     cursor.execute(first,args)
@@ -207,10 +207,10 @@ def main():
     # create a database connection
     conn = openConnection(database)
     with conn:
-        #dropTables(conn)
-        #createTables(conn)
+        dropTables(conn)
+        createTables(conn)
         #populateTables(conn)
-        frontPage(conn)
+        #frontPage(conn)
        
     closeConnection(conn, database)
 if __name__ == '__main__':
