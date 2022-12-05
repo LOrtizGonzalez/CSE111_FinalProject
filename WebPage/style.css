@@ -1,0 +1,38 @@
+body {
+    background-image: url('pic.jpg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+h1 {
+    text-align: center;
+}
+
+.main {
+    font-size: 50px;
+}
+
+h2 {
+    text-align: center;
+    text-decoration-line: underline;
+}
+
+h3 {
+    text-align: center;
+    color: rgb(3, 3, 3);
+}
+
+form {
+    text-align: center;
+}
+
+label {
+    background-color: aliceblue;
+}
+
+.home {
+    text-align: center;
+    list-style-type: none;
+    font-size: 50px;
+}
