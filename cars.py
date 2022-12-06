@@ -150,13 +150,78 @@ def frontPage(_conn):
         print("Enter a valid option")
         frontPage(_conn)
 
+
 def buyerPage(_conn):
     print("\n+===== BROWNSE CARS: =====+")
     cursor = _conn.cursor()
-    Make = input('Enter make: ')
-    Model = input('Enter model: ')
-    Year = input('Enter year: ')
+    print("""Choose make: \n
+        1. Ford
+        2. Dodge
+        3. Chevrolet
+        4. Honda
+        5. Toyota
+        6. BMW
+        7. Mercedes
+        """)
+    choice = input()
+    if(choice == '1'):
+        Make = 'Ford'
+    elif(choice == '2'):
+        Make = 'Dodge'
+    elif(choice == '3'):
+        Make = 'Chevrolet'
+    elif(choice == '4'):
+        Make = 'Honda'
+    elif(choice == '5'):
+        Make = 'Toyota'
+    elif(choice == '6'):
+        Make = 'BMW'
+    elif(choice == '7'):
+        Make = 'Mercedes'
+    else:
+        print("Invalid entry. \n")
+        buyerPage(_conn)
+
+    print("Choose model: ")
+    cmd = ("""SELECT a_model FROM Automobile WHERE a_make = ?
+        AND a_VIN IN(SELECT w_VIN FROM Warehouse)
+        GROUP BY a_model;""")
+    args = [Make]
+    cursor.execute(cmd,args)
+    res = cursor.fetchall()
+    n = 0
+    res1 = []
+    for row in res:
+        n+=1
+        res1 += res[n-1]
+        print(n,row)
+    print('\nEnter your choice: ')
+    choice1 = input()
+    while(n > int(choice1)):
+        n -= 1
     
+    Model = res1[n-1]
+    #print("This is the model: ",Model)
+    
+    print("""Choose year:
+        1. 2019
+        2. 2020
+        3. 2021
+        4. 2022
+        """)
+    choice2 = input()
+    if(choice2 == '1'):
+        Year = 2019
+    elif(choice2 == '2'):
+        Year = 2020
+    elif(choice2 == '3'):
+        Year = 2021
+    elif(choice2 == '4'):
+        Year = 2022
+    else:
+        print('Enter a valid year: ')
+
+    ###############################################################
     command = ("""SELECT * FROM Automobile WHERE a_make = ?
         AND a_model = ? AND a_year = ? AND a_VIN IN(SELECT w_VIN FROM warehouse);
         """)
@@ -179,6 +244,7 @@ def buyerPage(_conn):
         buyerPage(_conn)
     else:
         frontPage(_conn)
+
 
 def purchasePage(_conn):
     print('\n+===== Purchase Page =====+\n')
