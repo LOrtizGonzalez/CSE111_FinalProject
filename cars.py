@@ -135,20 +135,27 @@ def dropTables(_conn):
 # Front Page
 def frontPage(_conn):
     print("+================================+")
-    out ="""Are you buying or selling a vehicle?:
-    1. Buying
-    2. Selling
-    +==================================+
-    """
+    out =("""Are you buying or selling a vehicle?:
+1. Buying
+2. Selling
+3. End Program
++==================================+
+    """)
     print(out)
     choice = input()
     if(choice == '1'):
         buyerPage(_conn)
     elif(choice == '2'):
         sellerPage(_conn)
+    elif(choice == '3'):
+        end()
     else:
         print("Enter a valid option")
         frontPage(_conn)
+
+def end():
+    print("Program ended.")
+    exit()
 
 
 def buyerPage(_conn):
@@ -181,7 +188,11 @@ def buyerPage(_conn):
     else:
         print("Invalid entry. \n")
         buyerPage(_conn)
+    modelPage(_conn,Make)
 
+
+def modelPage(_conn, Make):
+    cursor = _conn.cursor()
     print("Choose model: ")
     cmd = ("""SELECT a_model FROM Automobile WHERE a_make = ?
         AND a_VIN IN(SELECT w_VIN FROM Warehouse)
@@ -197,12 +208,21 @@ def buyerPage(_conn):
         print(n,row)
     print('\nEnter your choice: ')
     choice1 = input()
+    if int(choice1) not in range(1,n+1,1):
+        print('\nInvalid Entry!\n')
+        modelPage(_conn,Make)
+    # if(int(choice1) > n):
+    #     print('\nInvalid entry.\n')
+    #     modelPage(_conn,Make)
     while(n > int(choice1)):
         n -= 1
     
     Model = res1[n-1]
+    yearPage(_conn,Make,Model)
     #print("This is the model: ",Model)
-    
+
+def yearPage(_conn,Make,Model):
+    cursor = _conn.cursor()
     print("""Choose year:
         1. 2019
         2. 2020
@@ -220,6 +240,7 @@ def buyerPage(_conn):
         Year = 2022
     else:
         print('Enter a valid year: ')
+        yearPage(_conn,Make,Model)
 
     ###############################################################
     command = ("""SELECT * FROM Automobile WHERE a_make = ?
@@ -229,7 +250,7 @@ def buyerPage(_conn):
     cursor.execute(command, args)
     print('Results: ')
     results = cursor.fetchall()
-    print('VIN    Make   Model     Type    Condition  Year   Price')
+    print('VIN    Make   Model    Type   Year   Condition  Color  Price')
     for row in results:
         print(row)
     
@@ -239,16 +260,19 @@ def buyerPage(_conn):
     *Press Any key to return home*
     """)
     if(choice == '1'):
-        purchasePage(_conn)
+        purchasePage(_conn,Make,Model,Year)
     elif(choice == '2'):
         buyerPage(_conn)
     else:
         frontPage(_conn)
 
 
-def purchasePage(_conn):
+def purchasePage(_conn,Make,Model,Year):
     print('\n+===== Purchase Page =====+\n')
     cursor = _conn.cursor()
+    make = Make
+    model = Model
+    year = Year
     vehicle = input('To purchase enter vehicle VIN: ')
     args = [vehicle]
     firstname = input('Enter your first name:')
@@ -265,7 +289,8 @@ def purchasePage(_conn):
     cursor.execute(first,args)
     result = cursor.fetchall()
     for row in result:
-        print(row)
+         print("")
+         #print(row)
     results = row
     #print("The vin = ",results[0])
 
@@ -286,18 +311,243 @@ def purchasePage(_conn):
     include = ("""INSERT INTO Transactions(t_trkey,t_VIN,t_custkey,t_sellername,t_price,t_date)
         VALUES(?,?,?,?,?,?);""") 
     conc = int(str(vehicle) + str(results[1]))
-    print(conc)
+    #print(conc)
     args3 = [conc,vehicle,results[1],results[2],results[3],date1]
     cursor.execute(include,args3)
     _conn.commit()   
-    
+    print("Congratulations ",firstname, " ",lastname," on your ",
+    year, " ", make, " ", model, "!!")
 
     #command = ("""INSERT INTO transactions """)
-
-
-
+#==========================================================================
+#Seller Log in
 def sellerPage(_conn):
-    print("you chose 2")
+    choice = input('Do you have a seller ID?: Y/N \n')
+    if (choice == 'Y' or choice == 'y'):
+        cursor = _conn.cursor()
+        Seller_ID = input('Enter Seller ID: ')
+        statement = f"SELECT * FROM Seller WHERE s_sellerkey = '{Seller_ID}';"
+        cursor.execute(statement)
+        if not cursor.fetchone():
+            print("Seller ID does not exist")
+            sellerPage(_conn)
+        else:
+            sellerCatalog(_conn, Seller_ID)
+    
+    elif(choice == 'N' or choice == 'n'):
+        PATH = input('Would you like to add yourself as a seller?: Y/N \n')
+        if (PATH == 'Y' or PATH == 'y'):
+            cursor = _conn.cursor()
+            Name = input('Insert company name: ')
+            Phone = input('Insert main phone number: ')
+            City = input('Insert city name: ')
+            State = input('Insert state name ')
+            Email = input('Insert main email address: ')
+
+            c = _conn.cursor()
+            c.execute("""SELECT count(distinct s_sellerkey) + 1
+             FROM Seller;""")
+            res = c.fetchall()
+            for row in res:
+                print(format(row))
+            results = format(row)
+            num = results[1]
+
+            cursor.execute("""INSERT INTO Seller(s_sellerkey,s_name, s_phone, s_city, s_state, s_email)
+            VALUES (?,?,?,?,?,?)""", (int(num),Name, Phone, City, State, Email))
+            _conn.commit()
+
+            # cursor.execute("""INSERT INTO Seller(s_sellerkey, s_name, s_phone, s_city, s_state, s_email)
+            # VALUES (?,?,?,?,?,?)""", (results, Name, Phone, City, State, Email))
+            # _conn.commit()
+
+            print('Seller created')
+            sellerPage(_conn)
+
+        else:
+            print("Thank you, come again\n")
+            frontPage(_conn)
+
+    # elif(choice == 'N' or choice == 'n'):
+    #     cursor = _conn.cursor()
+    #     Name = input('Insert company name: ')
+    #     Phone = input('Insert main phone number: ')
+    #     City = input('Insert city name: ')
+    #     State = input('Insert state name ')
+    #     Email = input('Insert main email address: ')
+
+    #     c = _conn.cursor()
+    #     c.execute("""SELECT count(distinct s_sellerkey) + 1
+    #      FROM seller;""")
+    #     res = c.fetchall()
+    #     for row in res:
+    #         print(format(*row))
+    #     results = format(*row)
+
+    #     cursor.execute("""INSERT INTO seller(s_sellerkey, s_name, s_phone, s_city, s_state, s_email)
+    #     VALUES (?,?,?,?,?,?)""", (results, Name, Phone, City, State, Email))
+    #     _conn.commit()
+
+        # print('Seller created')
+        # sellerPage(_conn)
+
+    #For deleting tables, do not use---       
+    elif(choice == '8000'):
+
+        cursor = _conn.cursor()
+        cursor.execute("""delete from seller Where s_sellerkey = '6';""")
+        _conn.commit()
+
+        sellerPage(_conn)
+
+    else:
+        print("Invalid option!")
+        sellerPage(_conn)
+
+
+#Seller Catalog
+def sellerCatalog(_conn, Seller_ID):
+    cursor = _conn.cursor()
+    command = ("""SELECT * FROM seller WHERE s_sellerkey = ?;""")
+    args = [Seller_ID]
+    cursor.execute(command, args)
+
+    print('Results: ')
+    results = cursor.fetchall()
+    print(' ID  Name        Phone           City     State  Email')
+    for row in results:
+        print(row)
+    print('\nChoose an option\n')
+    print('To view current inventory press: 1')
+    print('To add a vehicle press: 2')
+    print('To view past transactions press: 3')
+    print('To go back to home page press: 4')
+
+    choice = input()
+    if(choice == '1'):
+        cursor = _conn.cursor()
+        command = ("""SELECT a_VIN, a_make, a_model, a_type, a_year, a_condition, a_color, a_price
+         FROM seller, automobile, warehouse WHERE s_sellerkey = ? AND w_sellerkey = s_sellerkey
+         AND w_VIN = a_VIN;""")
+        args = [Seller_ID]
+        cursor.execute(command, args)
+
+        print('Results: ')
+        results = cursor.fetchall()
+        print(' VIN    Make    Model     Type    Condition  Year   Price')
+        for row in results:
+            print(row)
+
+        sellerCatalog(_conn, Seller_ID)
+
+        
+    elif(choice == '2'):
+        cursor = _conn.cursor()
+        Maker = input('Insert vehicle maker: ')
+        if (Maker == 'Ford' or Maker == 'Chevrolet' or Maker == 'Dodge' or Maker == 'Toyota' or Maker == 'Honda' or Maker == 'BMW' or Maker == 'Mercedes'):
+            Model = input('Insert vehicle model: ')
+            Type = input('Insert vehicle type: ')
+            Year = input('Insert vehicle year: ')
+            Condition = input('Insert vehicle condition: ')
+            Color = input('Insert vehicle color: ')
+            Price = input('Insert vehicle price: ')
+        else:
+            print("Invalid maker")
+            sellerCatalog(_conn, Seller_ID)
+        # Model = input('Insert vehicle model: ')
+        # Type = input('Insert vehicle type: ')
+        # Year = input('Insert vehicle year: ')
+        # Condition = input('Insert vehicle condition: ')
+        # Color = input('Insert vehicle color: ')
+        # Price = input('Insert vehicle price: ')
+
+
+        c = _conn.cursor()
+        c.execute("""SELECT count(distinct a_VIN) + 3100
+         FROM automobile;""")
+        res = c.fetchall()
+        for row in res:
+            print(format(*row))
+        results = format(*row)
+        
+
+        cursor.execute("""INSERT INTO automobile(a_VIN, a_make, a_model, a_type, a_year, a_condition, a_color, a_price)
+        VALUES (?,?,?,?,?,?,?,?)""", (results, Maker, Model, Type, Year, Condition, Color, Price))
+        _conn.commit()
+
+
+        cursor.execute("""INSERT INTO warehouse(w_VIN, w_sellerkey)
+        VALUES (?,?)""", (results, Seller_ID))
+        _conn.commit()
+        print('Added New Automobile')
+
+        sellerCatalog(_conn, Seller_ID)
+
+
+    elif(choice == '3'):
+        cursor = _conn.cursor()
+        command = ("""SELECT t_trkey, t_VIN, t_custkey, t_sellername, t_price, t_date
+            FROM seller, transactions WHERE s_sellerkey = ? AND t_sellername = s_name;
+            """)
+        args = [Seller_ID]
+        cursor.execute(command, args)
+
+        print('Results: ')
+        results = cursor.fetchall()
+        print('  Key        VIN  Custkey  Sellername  Price  Date')
+        for row in results:
+            print(row)
+
+        sellerCatalog(_conn, Seller_ID)
+
+    elif(choice == '4'):
+        frontPage(_conn)
+
+    #For deleting tables, do not use---       
+    elif(choice == '8000'):
+
+        cursor = _conn.cursor()
+        cursor.execute("""delete from automobile Where a_VIN = '3220';""")
+        _conn.commit()
+
+        cursor = _conn.cursor()
+        cursor.execute("""delete from warehouse Where w_VIN = '3220';""")
+        _conn.commit()
+
+
+        sellerCatalog(_conn, Seller_ID)
+    else:
+        print("Enter a valid option")
+        sellerCatalog(_conn, Seller_ID)
+
+#Manufacturer page
+def manufacturerPage(_conn):
+    cursor = _conn.cursor()
+    print('\nChoose your favorite manufacturer')
+    Make = input('Input either Ford, Chevrolet, Dodge, Toyota, Honda, BMW, or Mercedes to view model types\n')
+
+    if (Make == 'Ford' or 'Chevrolet' or 'Dodge' or 'Toyota' or 'Honda' or 'BMW' or 'Mercedes'):
+        cursor = _conn.cursor()
+        command = ("""SELECT *
+         FROM manufacturer WHERE m_make = ?;
+         """)
+        args = [Make]
+        cursor.execute(command, args)
+
+        print('Results: ')
+        results = cursor.fetchall()
+        print(' Key    Maker    Model     Type')
+        for row in results:
+            print(row)
+
+        frontPage(_conn)
+
+    else:
+        frontPage(_conn)
+
+
+# def sellerPage(_conn):
+#     print("you chose 2")
 
 def main():
     #database = r"automobiles.sqlite"
