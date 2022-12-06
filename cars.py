@@ -1,5 +1,6 @@
 import sqlite3
 from sqlite3 import Error
+from datetime import date
 
 
 def openConnection(_dbFile):
@@ -156,9 +157,9 @@ def buyerPage(_conn):
     Model = input('Enter model: ')
     Year = input('Enter year: ')
     
-    command = ("""SELECT * FROM automobile, warehouse WHERE a_make = ?
-        AND a_model = ? AND a_year = ? AND a_VIN IN(SELECT w_VIN FROM warehouse)
-        GROUP BY a_VIN;""")
+    command = ("""SELECT * FROM Automobile WHERE a_make = ?
+        AND a_model = ? AND a_year = ? AND a_VIN IN(SELECT w_VIN FROM warehouse);
+        """)
     args = [Make,Model,Year]
     cursor.execute(command, args)
     print('Results: ')
@@ -183,21 +184,48 @@ def purchasePage(_conn):
     print('\n+===== Purchase Page =====+\n')
     cursor = _conn.cursor()
     vehicle = input('To purchase enter vehicle VIN: ')
-    first = """SELECT a_VIN, a_price,s_name, 1100+count(c_custkey) FROM automobile, warehouse, seller, customer
-            WHERE w_VIN = ?
-            AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey; """
-    vin = first[0]
-    print(vin)
-    args =[vehicle]
-    cursor.execute(first,args)
-    result1 = cursor.fetchall()
+    args = [vehicle]
+    firstname = input('Enter your first name:')
+    lastname = input('Enter your last name: ')
+    city = input('Enter your city: ')
+    state = input('Enter your state: ')
+    phone = input('Enter your phone number(xxx-xxx-xxxx):')
+    date1 = date.today()
 
-    for row in result1:
+    #Retrieve car data for tranaction table
+    first = ("""SELECT a_VIN, 1100+count(c_custkey), s_name, a_price FROM automobile, warehouse, seller, customer
+            WHERE w_VIN = ?
+            AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey;""")
+    cursor.execute(first,args)
+    result = cursor.fetchall()
+    for row in result:
         print(row)
-    # cursor.execute(second,args)
-    # result1 = cursor.fetchall()
-    # for row in result1:
-    #     print(row)
+    results = row
+    #print("The vin = ",results[0])
+
+    #Create new customer tuple; custkey,vin,last/firstname,phone,city,state,seller
+    cust = ("""INSERT INTO Customer(c_custkey,c_VIN,c_lastname,c_firstname,
+        c_phone,c_city,c_state,c_sellername) VALUES(?,?,?,?,?,?,?,?)""")
+    args1 = [results[1],results[0],lastname,firstname,phone,city,state,results[2]]
+    cursor.execute(cust,args1)
+    _conn.commit()
+
+    #Remove car from warehouse
+    rm = ("""DELETE FROM Warehouse WHERE w_VIN = ?;""")
+    args2 = [vehicle]
+    cursor.execute(rm,args2)
+    _conn.commit()
+
+    #Update Transactions table
+    include = ("""INSERT INTO Transactions(t_trkey,t_VIN,t_custkey,t_sellername,t_price,t_date)
+        VALUES(?,?,?,?,?,?);""") 
+    conc = int(str(vehicle) + str(results[1]))
+    print(conc)
+    args3 = [conc,vehicle,results[1],results[2],results[3],date1]
+    cursor.execute(include,args3)
+    _conn.commit()   
+    
+
     #command = ("""INSERT INTO transactions """)
 
 
@@ -206,7 +234,8 @@ def sellerPage(_conn):
     print("you chose 2")
 
 def main():
-    database = r"automobiles.sqlite"
+    #database = r"automobiles.sqlite"
+    database = r"cars.db"
     # create a database connection
     conn = openConnection(database)
     with conn:
