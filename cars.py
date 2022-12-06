@@ -156,8 +156,9 @@ def buyerPage(_conn):
     Model = input('Enter model: ')
     Year = input('Enter year: ')
     
-    command = ("""SELECT * FROM automobile WHERE a_make = ?
-        AND a_model = ? AND a_year = ?;""")
+    command = ("""SELECT * FROM automobile, warehouse WHERE a_make = ?
+        AND a_model = ? AND a_year = ? AND a_VIN IN(SELECT w_VIN FROM warehouse)
+        GROUP BY a_VIN;""")
     args = [Make,Model,Year]
     cursor.execute(command, args)
     print('Results: ')
@@ -182,13 +183,15 @@ def purchasePage(_conn):
     print('\n+===== Purchase Page =====+\n')
     cursor = _conn.cursor()
     vehicle = input('To purchase enter vehicle VIN: ')
-    first = """SELECT a_VIN, a_price,s_name FROM automobile, warehouse, seller
-            WHERE a_VIN = 3205
+    first = """SELECT a_VIN, a_price,s_name, 1100+count(c_custkey) FROM automobile, warehouse, seller, customer
+            WHERE w_VIN = ?
             AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey; """
+    vin = first[0]
+    print(vin)
     args =[vehicle]
     cursor.execute(first,args)
     result1 = cursor.fetchall()
-    
+
     for row in result1:
         print(row)
     # cursor.execute(second,args)
@@ -207,10 +210,10 @@ def main():
     # create a database connection
     conn = openConnection(database)
     with conn:
-        dropTables(conn)
-        createTables(conn)
+        #dropTables(conn)
+        #createTables(conn)
         #populateTables(conn)
-        #frontPage(conn)
+        frontPage(conn)
        
     closeConnection(conn, database)
 if __name__ == '__main__':

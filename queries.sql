@@ -48,6 +48,11 @@ WHERE a_condition = 'Used' AND a_type = 'SUV';
 SELECT * FROM automobile
 WHERE a_type = 'SUV' AND a_price = 30000;
 
-SELECT a_VIN, a_price,s_name FROM automobile, warehouse, seller
-        WHERE a_VIN = 3205
-        AND a_VIN = w_VIN AND w_sellerkey = s_sellerkey;
+SELECT (w_VIN + '-' + '1122') as t_trkey, w_VIN, s_name, a_price FROM warehouse, seller, automobile
+        WHERE w_VIN = 3114
+        AND w_sellerkey = s_sellerkey
+        AND w_VIN = a_VIN;
+
+
+
+INSERT INTO transactions values(a_VIN+'-'+c_custkey,a_VIN,(count(c_custkey)),s_name, a_price, date)
