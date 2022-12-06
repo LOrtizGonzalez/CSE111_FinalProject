@@ -170,7 +170,7 @@ def buyerPage(_conn):
     
     choice = input("""\n\nWhat would you like to do?
     1. Buy
-    2. Browse
+    2. Continue Browsing
     *Press Any key to return home*
     """)
     if(choice == '1'):
@@ -204,7 +204,7 @@ def purchasePage(_conn):
     #print("The vin = ",results[0])
 
     #Create new customer tuple; custkey,vin,last/firstname,phone,city,state,seller
-    cust = ("""INSERT INTO Customer(c_custkey,c_VIN,c_lastname,c_firstname,
+    cust = ("""INSERT INTO Customer(c_custkey,c_VIN,c_lastname,c_fistname,
         c_phone,c_city,c_state,c_sellername) VALUES(?,?,?,?,?,?,?,?)""")
     args1 = [results[1],results[0],lastname,firstname,phone,city,state,results[2]]
     cursor.execute(cust,args1)
