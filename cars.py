@@ -132,17 +132,16 @@ def dropTables(_conn):
         _conn.execute("ROLLBACK")
         print(e)
 
-# Front Page
+# xxxxx HOME PAGE xxxxx 
 def frontPage(_conn):
-    print("+================================+")
-    out =("""Are you buying or selling a vehicle?:
-1. Buying
-2. Selling
-3. End Program
-+==================================+
+    print("\n+=============== HOME PAGE =================+")
+    out =("""Are you buying or selling a vehicle?:\n
+    1. Buying
+    2. Selling
+    3. End Program \n
     """)
     print(out)
-    choice = input()
+    choice = input("Enter choice: ")
     if(choice == '1'):
         buyerPage(_conn)
     elif(choice == '2'):
@@ -154,14 +153,14 @@ def frontPage(_conn):
         frontPage(_conn)
 
 def end():
-    print("Program ended.")
+    print("\nProgram ended.\n")
     exit()
 
-
+#BUYER side
 def buyerPage(_conn):
-    print("\n+===== BROWNSE CARS: =====+")
+    print("\n+=============== CHOOSE MAKE: ===============+")
     cursor = _conn.cursor()
-    print("""Choose make: \n
+    print('{:>10}'.format(""" 
         1. Ford
         2. Dodge
         3. Chevrolet
@@ -169,31 +168,52 @@ def buyerPage(_conn):
         5. Toyota
         6. BMW
         7. Mercedes
-        """)
-    choice = input()
-    if(choice == '1'):
+        """))
+    while True:
+        try:
+            choice = int(input('Enter MAKE choice: '))
+            assert 0 < choice <= 7
+        except ValueError:
+            print("Enter an integer!\n")
+        except AssertionError:
+            print("Invalid Integer input!\n")
+        else:
+            break
+    if(choice == 1):
         Make = 'Ford'
-    elif(choice == '2'):
+    elif(choice == 2):
         Make = 'Dodge'
-    elif(choice == '3'):
+    elif(choice == 3):
         Make = 'Chevrolet'
-    elif(choice == '4'):
+    elif(choice == 4):
         Make = 'Honda'
-    elif(choice == '5'):
+    elif(choice == 5):
         Make = 'Toyota'
-    elif(choice == '6'):
+    elif(choice == 6):
         Make = 'BMW'
-    elif(choice == '7'):
-        Make = 'Mercedes'
     else:
-        print("Invalid entry. \n")
-        buyerPage(_conn)
-    modelPage(_conn,Make)
+        Make = 'Mercedes'
+    
+    while True:
+        try:
+            choice2 = int(input("\n1. Enter Model or 2. Search up now?: "))
+            assert 0 < choice2 <= 2
+        except ValueError:
+            print("Enter an Integer!\n")
+        except AssertionError:
+            print("Enter a Valid Integer!\n")
+        else:
+            break
+    if(choice2 == 1):
+        modelPage(_conn,Make)
+    else:
+        search1(_conn,Make)
 
 
 def modelPage(_conn, Make):
     cursor = _conn.cursor()
-    print("Choose model: ")
+    print("\n+=========== CHOOSE MODEL ===========+\n")
+
     cmd = ("""SELECT a_model FROM Automobile WHERE a_make = ?
         AND a_VIN IN(SELECT w_VIN FROM Warehouse)
         GROUP BY a_model;""")
@@ -203,66 +223,131 @@ def modelPage(_conn, Make):
     n = 0
     res1 = []
     for row in res:
-        n+=1
+        n+=1 #keeps track of the number of options
         res1 += res[n-1]
-        print(n,row)
-    print('\nEnter your choice: ')
-    choice1 = input()
-    if int(choice1) not in range(1,n+1,1):
-        print('\nInvalid Entry!\n')
-        modelPage(_conn,Make)
-    # if(int(choice1) > n):
-    #     print('\nInvalid entry.\n')
-    #     modelPage(_conn,Make)
-    while(n > int(choice1)):
-        n -= 1
-    
-    Model = res1[n-1]
-    yearPage(_conn,Make,Model)
+        a = res1[n-1].replace("'", '') #removed the '' from the return string1
+        print('{:>9}'.format(n),a) ###------changed from row
+   
+    while True:
+        try: 
+            choice = int(input('\nEnter MODEL choice: '))
+            assert 0 < choice <= n
+        except ValueError:
+            print('Invalid entry!!')
+        except AssertionError:
+            print("Enter an integer!")
+        else:
+            break
+
+    Model = res1[choice - 1]
     #print("This is the model: ",Model)
+    while True:
+        try:
+            choice1 = int(input("\n\n1. Enter Year OR 2. Search Now: "))
+            assert 0 < choice1 <= 2
+        except ValueError:
+            print("Enter an Integer!")
+        except AssertionError:
+            print("Enter a valid Integer!")
+        else:
+            break
+    
+    if(choice1 == 1):
+        yearPage(_conn,Make,Model)
+    else:
+        search2(_conn,Make,Model)
+
 
 def yearPage(_conn,Make,Model):
     cursor = _conn.cursor()
-    print("""Choose year:
+    print("\n+=============== CHOOSE YEAR ===============+")
+    print("""
         1. 2019
         2. 2020
         3. 2021
         4. 2022
         """)
-    choice2 = input()
-    if(choice2 == '1'):
+    while True:
+        try:
+            choice = int(input("Enter Year choice: "))
+            assert 0 < choice <= 4
+        except ValueError:
+            print("Enter an Integer choice: \n")
+        except AssertionError:
+            print("Enter valid Integer!\n")
+        else: 
+            break
+    if(choice == 1):
         Year = 2019
-    elif(choice2 == '2'):
+    elif(choice == 2):
         Year = 2020
-    elif(choice2 == '3'):
+    elif(choice == 3):
         Year = 2021
-    elif(choice2 == '4'):
-        Year = 2022
     else:
-        print('Enter a valid year: ')
-        yearPage(_conn,Make,Model)
+        Year = 2022
 
-    ###############################################################
+    search3(_conn,Make,Model,Year)
+
+def search1(_conn,Make):
+    cursor = _conn.cursor()
+    sql = ("""SELECT * FROM automobile WHERE a_make = ?
+        AND a_VIN IN (SELECT w_VIN FROM warehouse);""")
+    args = [Make]
+    cursor.execute(sql,args)
+    results = cursor.fetchall()
+    print("\n\nResults for",Make,":\n")
+    print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format('VIN',    'Make',   'Model'    ,'Type'   ,'Year'   ,'Condition'  ,'Color',  'Price'))
+    for row in results:
+        print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format(row[0],
+        row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
+    option(_conn,row[1],row[2],row[4])
+
+def search2(_conn,Make,Model):
+    cursor = _conn.cursor()
+    sql = ("""SELECT * FROM automobile WHERE a_make = ? 
+        AND a_model = ? AND a_VIN IN (SELECT w_vin FROM warehouse);""")
+    args = [Make,Model]
+    cursor.execute(sql,args)
+    results = cursor.fetchall()
+    print("\n\nResults for ",Make,Model,": ")
+    print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format('VIN',    'Make',   'Model'    ,'Type'   ,'Year'   ,'Condition'  ,'Color',  'Price'))
+
+    for row in results:
+        print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format(row[0],
+        row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
+    option(_conn,row[1],row[2],row[4])
+
+
+def search3(_conn,Make,Model,Year):
+    cursor = _conn.cursor()
     command = ("""SELECT * FROM Automobile WHERE a_make = ?
         AND a_model = ? AND a_year = ? AND a_VIN IN(SELECT w_VIN FROM warehouse);
         """)
     args = [Make,Model,Year]
     cursor.execute(command, args)
-    print('Results: ')
+    print('\nResults: ')
     results = cursor.fetchall()
-    print('VIN    Make   Model    Type   Year   Condition  Color  Price')
-    for row in results:
+    count = 0
+    arr = results
+    print("\nResults for",Make,Model,Year,":\n")
+    print('{:<15}'.format('VIN    Make   Model    Type   Year   Condition  Color  Price')) #Added formatting
+    for row in arr:
         print(row)
-    
-    choice = input("""\n\nWhat would you like to do?
-    1. Buy
-    2. Continue Browsing
-    *Press Any key to return home*
+    option(_conn,Make,Model,Year)
+
+
+def option(_conn,Make,Model,Year):
+    print("\n\n+=============================================+")
+    print("""\nWhat would you like to do?\n
+    1. Continue Browsing
+    2. Buy Vehicle
+    (*Press Any key to return home*)
     """)
+    choice = input("Enter your choice: ")
     if(choice == '1'):
-        purchasePage(_conn,Make,Model,Year)
-    elif(choice == '2'):
         buyerPage(_conn)
+    elif(choice == '2'):
+        purchasePage(_conn,Make,Model,Year)
     else:
         frontPage(_conn)
 
@@ -293,7 +378,6 @@ def purchasePage(_conn,Make,Model,Year):
          #print(row)
     results = row
     #print("The vin = ",results[0])
-
     #Create new customer tuple; custkey,vin,last/firstname,phone,city,state,seller
     cust = ("""INSERT INTO Customer(c_custkey,c_VIN,c_lastname,c_fistname,
         c_phone,c_city,c_state,c_sellername) VALUES(?,?,?,?,?,?,?,?)""")
@@ -318,7 +402,6 @@ def purchasePage(_conn,Make,Model,Year):
     print("Congratulations ",firstname, " ",lastname," on your ",
     year, " ", make, " ", model, "!!")
 
-    #command = ("""INSERT INTO transactions """)
 #==========================================================================
 #Seller Log in
 def sellerPage(_conn):
