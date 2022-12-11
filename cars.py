@@ -310,7 +310,7 @@ def search2(_conn,Make,Model):
     cursor.execute(sql,args)
     results = cursor.fetchall()
     print("\n\nResults for ",Make,Model,": ")
-    print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format('VIN',    'Make',   'Model'    ,'Type'   ,'Year'   ,'Condition'  ,'Color',  'Price'))
+    print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format('VIN','Make','Model','Type','Year','Condition','Color','Price'))
 
     for row in results:
         print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format(row[0],
@@ -327,12 +327,15 @@ def search3(_conn,Make,Model,Year):
     cursor.execute(command, args)
     print('\nResults: ')
     results = cursor.fetchall()
-    count = 0
-    arr = results
+    #count = 0
+    #arr = results
     print("\nResults for",Make,Model,Year,":\n")
-    print('{:<15}'.format('VIN    Make   Model    Type   Year   Condition  Color  Price')) #Added formatting
-    for row in arr:
-        print(row)
+    print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format('VIN','Make','Model','Type','Year','Condition','Color','Price'))
+ #Added formatting
+    for row in results:
+        print('{:<10}{:<12}{:<15}{:<15}{:<10}{:<10}{:<10}{:<10}'.format(row[0],
+        row[1],row[2],row[3],row[4],row[5],row[6],row[7]))
+        #print(row)
     option(_conn,Make,Model,Year)
 
 
